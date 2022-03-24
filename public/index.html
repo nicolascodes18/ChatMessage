@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <form id="chat">
+        <label class="userId"></label>
+
+        <input type="text" name="username" placeholder="Digite seu usuario">
+        <div class="messages"></div>
+        <input type="text" name="message" placeholder="Digite sua mensagem">
+        <button type="submit">Enviar</button>
+    </form>
+
+    <script type="text/javascript">
+
+        var socket = io("http://localhost:3000");
+
+        function renderMessage(message) {
+            $('.messages').append('<strong>'+message.user+'</strong>:'+message.message+'');
+        }
+        
+        socket.on('userId', function(userId) {
+            $('.userId').append(`userID: ${userId}`)
+        });
+
+
+        socket.on("previous-messages", function(messages) {
+            for(message of messages) {
+                renderMessage(message);
+            }
+        });
+
+        socket.on("receive-message", function(message) {
+            renderMessage(message);
+        })
+
+        $('#chat').submit(function (event) {
+            event.preventDefault();
+
+            var user = $('input[name="username"]').val();
+            var message = $('input[name="message"]').val();
+
+            if (user.length && message.length) {
+                var messageObject = {
+                    user: user,
+                    message: message,
+                }
+                renderMessage(messageObject)
+                socket.emit("sendMessage", messageObject)
+            }
+        });
+    </script>
+</body>
+
+</html>
